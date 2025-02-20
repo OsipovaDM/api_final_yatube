@@ -12,6 +12,9 @@ class Group(models.Model):
     slug = models.CharField(max_length=32)
     description = models.TextField()
 
+    def __str__(self):
+        return self.description
+
 
 class Post(models.Model):
     text = models.TextField()
@@ -21,7 +24,8 @@ class Post(models.Model):
     image = models.ImageField(
         upload_to='posts/', null=True, blank=True)
     group = models.ForeignKey(
-        Group, on_delete=models.CASCADE, related_name='posts')
+        Group, on_delete=models.CASCADE,
+        related_name='posts', null=True, blank=True)
 
     def __str__(self):
         return self.text
@@ -39,9 +43,14 @@ class Comment(models.Model):
 
 class Follow(models.Model):
     '''
-    Связывает пользователей с группами, на которые они подписаны
+    Связывает подписчиков с пользователями, на которых они подписаны
     '''
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='follows')
+        User, on_delete=models.CASCADE, related_name='follows_user')
     following = models.ForeignKey(
-        Group, on_delete=models.CASCADE, related_name='follows')
+        User, on_delete=models.CASCADE, related_name='follows_following')
+
+    class Meta:
+        constraints = (
+            models.UniqueConstraint(fields=('user', 'following'), name='uk1'),
+        )
