@@ -28,7 +28,7 @@ class GroupSerializer(serializers.ModelSerializer):
     '''
 
     class Meta:
-        fields = ('title', 'slug', 'description')
+        fields = ('id', 'title', 'slug', 'description')
         model = Group
 
 
@@ -41,7 +41,7 @@ class PostSerializer(serializers.ModelSerializer):
     image = Base64ImageField(required=False, allow_null=True)
 
     class Meta:
-        fields = ('text', 'pub_date', 'author', 'image', 'group')
+        fields = ('id', 'text', 'pub_date', 'author', 'image', 'group')
         model = Post
         read_only_fields = ('pub_date', 'author')
 
@@ -57,7 +57,7 @@ class CommentSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = ('author', 'post', 'text', 'created')
+        fields = ('id', 'author', 'post', 'text', 'created')
         model = Comment
         read_only_fields = ('author', 'post', 'created')
 
