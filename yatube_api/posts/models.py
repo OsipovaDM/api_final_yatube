@@ -47,9 +47,9 @@ class Follow(models.Model):
     Связывает подписчиков с пользователями, на которых они подписаны
     '''
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='follows_user')
+        User, on_delete=models.CASCADE, related_name='followings')
     following = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='follows_following')
+        User, on_delete=models.CASCADE, related_name='followers')
 
     class Meta:
         constraints = (

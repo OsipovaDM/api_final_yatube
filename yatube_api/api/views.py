@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import mixins, filters, serializers, viewsets
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticated
@@ -53,15 +54,20 @@ class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = (AuthorOrReadOnly,)
 
+    # Выделение публикации из запроса
+    def get_post(self):
+        post_id = self.kwargs.get("post_id")
+        post = get_object_or_404(Post, pk=post_id)
+        return post
+
     # Извлечение параметров из запроса
     def get_queryset(self):
-        post_id = self.kwargs.get("post_id")
-        new_queryset = Comment.objects.filter(post=post_id)
-        return new_queryset
+        post = self.get_post()
+        return post.comments.all()
 
     def perform_create(self, serializer):
-        post_id = self.kwargs.get("post_id")
-        serializer.save(author=self.request.user, post_id=post_id)
+        post = self.get_post()
+        serializer.save(author=self.request.user, post_id=post.id)
 
 
 # CreateModelMixin — создать объект (для обработки запросов POST);
@@ -81,7 +87,7 @@ class FollowViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin,
 
     def get_queryset(self):
         user = self.request.user
-        return Follow.objects.filter(user=user)
+        return user.followings.all()
 
     def perform_create(self, serializer):
         user = self.request.user
