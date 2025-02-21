@@ -89,5 +89,9 @@ class FollowViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin,
         if user == following:
             raise serializers.ValidationError(
                 'Пользователь не может подписаться сам на себя.')
+        elif Follow.objects.all().filter(
+                user=user, following=following).exists():
+            raise serializers.ValidationError(
+                'Пользователь уже подписан на данного автора.')
         else:
             serializer.save(user=user)
