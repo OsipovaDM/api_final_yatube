@@ -1,4 +1,4 @@
-import base64  # Перевод картинок в строку base64
+import base64
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from rest_framework import serializers
@@ -12,21 +12,13 @@ User = get_user_model()
 
 class Base64ImageField(serializers.ImageField):
     '''
-    Перевод файла в код
+    Декодировать изображение из base64
     '''
     def to_internal_value(self, data):
-        # Если полученный объект строка, и эта строка
-        # начинается с 'data:image'...
         if isinstance(data, str) and data.startswith('data:image'):
-            # ...начинаем декодировать изображение из base64.
-            # Сначала нужно разделить строку на части.
             format, imgstr = data.split(';base64,')
-            # И извлечь расширение файла.
             ext = format.split('/')[-1]
-            # Затем декодировать сами данные и поместить результат в файл,
-            # которому дать название по шаблону.
             data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
-
         return super().to_internal_value(data)
 
 
@@ -36,41 +28,54 @@ class GroupSerializer(serializers.ModelSerializer):
     '''
 
     class Meta:
-        fields = '__all__'
+        fields = ('title', 'slug', 'description')
         model = Group
 
 
 class PostSerializer(serializers.ModelSerializer):
-    author = SlugRelatedField(slug_field='username', read_only=True)
-    # group = serializers.PrimaryKeyRelatedField(required=False)
+    author = SlugRelatedField(
+        slug_field='username',
+        read_only=True,
+        default=serializers.CurrentUserDefault(),
+    )
     image = Base64ImageField(required=False, allow_null=True)
 
     class Meta:
-        fields = '__all__'
+        fields = ('text', 'pub_date', 'author', 'image', 'group')
         model = Post
+        read_only_fields = ('pub_date', 'author')
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    author = serializers.SlugRelatedField(
-        read_only=True, slug_field='username'
+    '''
+    Преобразует данные комментариев в "удобочитаемый вид"
+    '''
+    author = SlugRelatedField(
+        read_only=True,
+        slug_field='username',
+        default=serializers.CurrentUserDefault(),
     )
 
     class Meta:
-        fields = '__all__'
+        fields = ('author', 'post', 'text', 'created')
         model = Comment
-        read_only_fields = ('post',)
+        read_only_fields = ('author', 'post', 'created')
 
 
 class FollowSerializer(serializers.ModelSerializer):
     '''
     Преобразует данные подписок в "удобочитаемый вид"
     '''
-    # передать вместо id строковые представления связанных объектов
-    user = serializers.StringRelatedField(
-        read_only=True, default=serializers.CurrentUserDefault())
+    user = SlugRelatedField(
+        slug_field='username',
+        read_only=True,
+        default=serializers.CurrentUserDefault()
+    )
     following = SlugRelatedField(
-        slug_field='username', queryset=User.objects.all())
+        slug_field='username',
+        queryset=User.objects.all()
+    )
 
     class Meta:
-        fields = '__all__'
+        fields = ('user', 'following')
         model = Follow
